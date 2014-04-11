@@ -33,7 +33,7 @@ int lerp(float progress, int initial, int final) {
  */
 void normal_mode_step(char brightness, char display_colour) {
     
-    char new_brightness = brightness;
+    int new_brightness = brightness;
     
     // handle the brightness being changed
     if (brightness_changed) {
@@ -78,7 +78,7 @@ void normal_mode_step(char brightness, char display_colour) {
  */
 void random_mode_step() {
     if (brightness_changed) {
-        bool new_low_bright = brightness >= brightness_threshold;
+        bool new_low_bright = brightness <= brightness_threshold;
         if (new_low_bright != low_bright) {
             random_index = -1;
             lerp_start_time = 0;
@@ -97,8 +97,9 @@ void random_mode_step() {
         prev_b = last_b;
         
         if (low_bright) {
+            //Serial.print("LOW: ");
             if (random_index >= LOW_BRIGHT_STEPS) {
-                random_index == 0;   
+                random_index = 0;   
             } else {
                 random_index++;
             }
@@ -107,16 +108,28 @@ void random_mode_step() {
             prev_g = target_g;
             prev_b = target_b;
             
-            target_r = low_brightness[random_index][R];
-            target_g = low_brightness[random_index][G];
-            target_b = low_brightness[random_index][B];
-            target_duration = low_brightness[random_index][DURATION];
+            target_duration = low_brightness[random_index][0];
+            target_r = low_brightness[random_index][RED] * brightness;
+            target_g = low_brightness[random_index][GREEN] * brightness;
+            target_b = low_brightness[random_index][BLUE] * brightness;
         } else {
+            //Serial.print("HIGH: ");
             target_r = random(0, 256);
             target_g = random(0, 256);
             target_b = random(0, 256);
             target_duration = random(1, 300) * 10;
         }
+        
+        /*
+        Serial.print(">>> ");
+        Serial.print(target_r);
+        Serial.print(" ");
+        Serial.print(target_g);
+        Serial.print(" ");
+        Serial.print(target_b);
+        Serial.print(" ");
+        Serial.println(target_duration);
+        */
         
         lerp_start_time = millis();
     }

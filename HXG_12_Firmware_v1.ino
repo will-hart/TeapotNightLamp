@@ -20,9 +20,9 @@
 #define G2 10
 #define B2 11
 #define PIN_BRT 7
-#define PIN_DIM 8
-#define PIN_COL 12
-#define PIN_RND 13
+#define PIN_DIM 4
+#define PIN_COL 8
+#define PIN_RND 12
 
 // colour definitions
 #define WHITE 0
@@ -32,14 +32,11 @@
 
 // control timings
 #define LERP_PERIOD 1000.0
-#define TIME_PERIOD 100
+#define TIME_PERIOD 50
 
 // Random data format Indexes
 #define LOW_BRIGHT_STEPS 9
-#define R 0
-#define G 1
-#define B 2
-#define DURATION 3
+#define DURATION 0
 
 // set up four button debouncers
 Bounce brighter = Bounce();
@@ -55,7 +52,7 @@ bool randomise_released = true;
 
 // store the brightness
 int last_brightness = 150;
-int brightness = 150;
+int brightness = 0;
 int brightness_delta = 40;
 
 // store the current colour
@@ -71,10 +68,17 @@ long last_millis = 0;
 // set up variables for controlling the random show
 const int brightness_threshold = 150;
 char random_index = -1;
-bool low_bright = brightness >= brightness_threshold;
-int last_r, last_g, last_b;
-int prev_r, prev_g, prev_b;
-int target_r, target_g, target_b, target_duration;
+bool low_bright = brightness <= brightness_threshold;
+int last_r;
+int last_g;
+int last_b;
+int prev_r; 
+int prev_g;
+int prev_b;
+int target_r;
+int target_g; 
+int target_b; 
+int target_duration;
 
 void setup() {
     // set pin modes
@@ -111,6 +115,8 @@ void setup() {
     // wait a bit, then store the current time
     delay(100);
     last_millis = millis();
+   
+    Serial.begin(57600);
 }
 
 void loop() {
@@ -122,6 +128,7 @@ void loop() {
   
     // check our brightness
     if (brighter.read() == LOW) {
+        //Serial.print("BR ");
         if (!lerping && bright_released) {
             brightness_changed = true;
             bright_released = false;
@@ -129,9 +136,11 @@ void loop() {
             brightness = constrain(brightness + brightness_delta, 0, 255);
         }
     } else {
+        //Serial.print("   ");
         bright_released = true;
         
         if (dimmer.read() == LOW) {
+            //Serial.print("DM ");
             if (!lerping && dimmer_released) {
                 brightness_changed = true;
                 dimmer_released = false;
@@ -139,12 +148,14 @@ void loop() {
                 brightness = constrain(brightness - brightness_delta, 0, 255);
             }
         } else {
+            //Serial.print("   ");
             dimmer_released = true;
         }
     }
     
     // see if we are changing the colour
     if (colour.read() == LOW) {
+        //Serial.print("CL ");
         if (colour_released) {
             colour_released = false;
             display_colour++;
@@ -153,17 +164,24 @@ void loop() {
             }
         }
     } else {
+        //Serial.print("   ");
         colour_released = true;
     }
     
     // check if we need to toggle RANDO mode
     if (randomise.read() == LOW) {
+        //Serial.print("RD ");
         if (randomise_released) {
             randomise_released = false;
             random_mode = !random_mode;
+            
+            if (random_mode) {
+                low_bright = brightness <= brightness_threshold;   
+            }
             lerp_start_time = 0;
         }
     } else {
+        //Serial.print("   ");
         randomise_released = true;
     }
     
@@ -177,4 +195,15 @@ void loop() {
         
         last_millis = millis();
     }
+    
+    /*Serial.print(brightness);
+    Serial.print(" ");
+    Serial.print(last_r);
+    Serial.print(" ");
+    Serial.print(last_g);
+    Serial.print(" ");
+    Serial.print(last_b);
+    Serial.print(" ");
+    Serial.print(random_index);
+    Serial.println(" ");*/
 }
