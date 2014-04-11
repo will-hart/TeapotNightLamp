@@ -2,32 +2,15 @@
  * A Night Lamp library for my little nieces... basically takes four buttons, a couple of 
  * RGB LEDs and creates some magical patterns for them.
  *
- * Made with uncley and aunty love, Clare and Will
+ * This is the main script which reads buttons and controls the light show parameters
+ *
+ * Made with Uncley and Auntly love, Clare and Will.
+ *
+ * MIT Licensed, Will Hart 2014
+ *
  */
 
 #include <Bounce2.h>
-
-// set up four button debouncers
-Bounce brighter = Bounce();
-Bounce dimmer = Bounce();
-Bounce colour = Bounce();
-Bounce randomise = Bounce();
-
-// store the brightness
-int brightness = 150;
-int brightness_delta = 40;
-
-// colour definitions
-#define WHITE 0
-#define RED 1
-#define GREEN 2
-#define BLUE 3
-
-// store the current colour
-char display_colour = WHITE;
-
-// store a flag for random mode
-bool random_mode = false;
 
 // pin definitions
 #define R1 1
@@ -41,9 +24,57 @@ bool random_mode = false;
 #define PIN_COL 9
 #define PIN_RND 10
 
-// update freuqency
-int time_period = 100; // update once this number of millis has elapsed
-int last_millis = 0;
+// colour definitions
+#define WHITE 0
+#define RED 1
+#define GREEN 2
+#define BLUE 3
+
+// control timings
+#define LERP_PERIOD 1000.0
+#define TIME_PERIOD 100
+
+// Random data format Indexes
+#define LOW_BRIGHT_STEPS 9
+#define R 0
+#define G 1
+#define B 2
+#define DURATION 3
+
+// set up four button debouncers
+Bounce brighter = Bounce();
+Bounce dimmer = Bounce();
+Bounce colour = Bounce();
+Bounce randomise = Bounce();
+
+// flag to make sure buttons are released before they are pressed again
+bool bright_released = true;
+bool dimmer_released = true;
+bool colour_released = true;
+bool randomise_released = true;
+
+// store the brightness
+int last_brightness = 150;
+int brightness = 150;
+int brightness_delta = 40;
+
+// store the current colour
+char display_colour = WHITE;
+
+// set up flags and counters for controlling the normal show
+bool random_mode = false;
+bool brightness_changed = false;
+bool lerping = false;
+long lerp_start_time = 0;
+long last_millis = 0;
+
+// set up variables for controlling the random show
+const int brightness_threshold = 150;
+char random_index = -1;
+bool low_bright = brightness >= brightness_threshold;
+int last_r, last_g, last_b;
+int prev_r, prev_g, prev_b;
+int target_r, target_g, target_b, target_duration;
 
 void setup() {
     // set pin modes
@@ -74,13 +105,16 @@ void setup() {
     randomise.attach(PIN_RND);
     randomise.interval(5);
     
+    // initialise the random number generator
+    randomSeed(analogRead(0));
+    
     // wait a bit, then store the current time
     delay(100);
     last_millis = millis();
 }
 
 void loop() {
-    // read the buttons
+    // update the button debounce state
     brighter.update();
     dimmer.update();
     colour.update();
@@ -88,30 +122,57 @@ void loop() {
   
     // check our brightness
     if (brighter.read() == LOW) {
-        brightness = constrain(brightness + brightness_delta, 0, 255);
-    } else if (dimmer.read() == LOW) {
-        brightness = constrain(brightness - brightness_delta, 0, 255);
+        if (!lerping && bright_released) {
+            brightness_changed = true;
+            bright_released = false;
+            last_brightness = brightness;
+            brightness = constrain(brightness + brightness_delta, 0, 255);
+        }
+    } else {
+        bright_released = true;
+        
+        if (dimmer.read() == LOW) {
+            if (!lerping && dimmer_released) {
+                brightness_changed = true;
+                dimmer_released = false;
+                last_brightness = brightness;
+                brightness = constrain(brightness - brightness_delta, 0, 255);
+            }
+        } else {
+            dimmer_released = true;
+        }
     }
     
-    // check our colour
+    // see if we are changing the colour
     if (colour.read() == LOW) {
-        display_colour++;
-        if (display_colour > BLUE) {
-            display_colour = WHITE;
+        if (colour_released) {
+            colour_released = false;
+            display_colour++;
+            if (display_colour > BLUE) {
+                display_colour = WHITE;
+            }
         }
+    } else {
+        colour_released = true;
     }
     
     // check if we need to toggle RANDO mode
     if (randomise.read() == LOW) {
-        random_mode = !random_mode;
+        if (randomise_released) {
+            randomise_released = false;
+            random_mode = !random_mode;
+            lerp_start_time = 0;
+        }
+    } else {
+        randomise_released = true;
     }
     
     // if we have passed our delay period, update the LEDs
-    if (millis() - time_period > last_millis) {
+    if (millis() - TIME_PERIOD > last_millis) {
         if (random_mode) {
             random_mode_step();
         } else {
-            render_leds(brightness, display_colour);
+            normal_mode_step(brightness, display_colour);
         }
         
         last_millis = millis();
