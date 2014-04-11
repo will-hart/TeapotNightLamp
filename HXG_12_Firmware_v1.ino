@@ -13,16 +13,16 @@
 #include <Bounce2.h>
 
 // pin definitions
-#define R1 1
-#define G1 2
-#define B1 3
-#define R2 4
-#define G2 5
-#define B2 6
+#define R1 3
+#define G1 5
+#define B1 6
+#define R2 9
+#define G2 10
+#define B2 11
 #define PIN_BRT 7
 #define PIN_DIM 8
-#define PIN_COL 9
-#define PIN_RND 10
+#define PIN_COL 12
+#define PIN_RND 13
 
 // colour definitions
 #define WHITE 0
