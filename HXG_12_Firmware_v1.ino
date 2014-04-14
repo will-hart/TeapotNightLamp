@@ -69,16 +69,16 @@ long last_millis = 0;
 const int brightness_threshold = 150;
 char random_index = -1;
 bool low_bright = brightness <= brightness_threshold;
-int last_r;
-int last_g;
-int last_b;
-int prev_r; 
-int prev_g;
-int prev_b;
-int target_r;
-int target_g; 
-int target_b; 
-int target_duration;
+unsigned int last_r;
+unsigned int last_g;
+unsigned int last_b;
+unsigned int prev_r; 
+unsigned int prev_g;
+unsigned int prev_b;
+unsigned int target_r;
+unsigned int target_g; 
+unsigned int target_b; 
+unsigned int target_duration;
 
 void setup() {
     // set pin modes

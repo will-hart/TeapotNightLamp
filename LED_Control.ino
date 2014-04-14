@@ -19,7 +19,7 @@
  *  - initial: the initial LERP value
  *  - final: the final LERP value
  */
-int lerp(float progress, int initial, int final) {
+unsigned int lerp(float progress, int initial, int final) {
     if (progress >= 1.0) {
         return final;
     }
@@ -45,7 +45,7 @@ void normal_mode_step(char brightness, char display_colour) {
     // lerp between the brightness levels if required
     if (lerping) {
         long elapsed = millis() - lerp_start_time;
-        float progress = elapsed / LERP_PERIOD;
+        float progress = (float)elapsed / LERP_PERIOD;
         new_brightness = lerp(progress, last_brightness, brightness);
         
         if (progress > 1.0) {
@@ -120,26 +120,35 @@ void random_mode_step() {
             target_duration = random(1, 300) * 10;
         }
         
-        /*
-        Serial.print(">>> ");
+        
+        /*Serial.print(">>> ");
         Serial.print(target_r);
         Serial.print(" ");
         Serial.print(target_g);
         Serial.print(" ");
         Serial.print(target_b);
         Serial.print(" ");
-        Serial.println(target_duration);
-        */
+        Serial.println(target_duration);*/
+        
         
         lerp_start_time = millis();
     }
     
     // determine our new rgb values
     long elapsed = millis() - lerp_start_time;
-    float progress = elapsed / target_duration;
+    float progress = (float)elapsed / target_duration;
     last_r = lerp(progress, prev_r, target_r);
     last_g = lerp(progress, prev_g, target_g);
     last_b = lerp(progress, prev_b, target_b);
+    
+    Serial.print(">>> ");
+    Serial.print(last_r);
+    Serial.print(" ");
+    Serial.print(last_g);
+    Serial.print(" ");
+    Serial.print(last_b);
+    Serial.print(" ");
+    Serial.println(progress);
     
     // work out if we are ready for the next step
     if (progress >= 1.0) {

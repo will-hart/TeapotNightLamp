@@ -11,15 +11,15 @@
  */
  
 // LIGHT SHOWS ARE STORED IN THE FOLLOWING 2D ARRAY FORMAT:
-//  [ Lerp Duration (ms), R, G, B ]
+//  [ Lerp Duration (msec), R, G, B ]
 
 /* 
  * A pulsing, low brightness display for encouraging sleep
  */
 
  
-unsigned char low_brightness[LOW_BRIGHT_STEPS][4] = {
-    { 1000,   0,   0,   0},
+unsigned int low_brightness[LOW_BRIGHT_STEPS][4] = {
+    { 3000,   0,   0,   0},
     { 3000,   1,   0,   0},
     { 3000,   0,   0,   0},
     { 3000,   0,   1,   0},
